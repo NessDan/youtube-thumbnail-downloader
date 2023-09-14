@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NessDan's YouTube Thumbnail Downloader</title>
+    <style>
+      * {
+        text-align: center;
+      }
+
+      body > * {
+        min-width: 100%;
+      }
+
+      h1 {
+        font-size: 120%;
+      }
+
+      hr {
+        border-color: black;
+      }
+
+      .or-container {
+        position: relative;
+        text-align: center;
+        margin: 10px 0;
+      }
+
+      .or-text {
+        display: inline-block;
+        background-color: #fff;
+        padding: 0 10px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .or-line {
+        position: absolute;
+        top: 10%;
+        width: 100%;
+        z-index: 0;
+      }
+
+      .display-none {
+        display: none;
+      }
+
+      .thumbnail {
+        cursor: pointer;
+        display: block;
+        width: 100%;
+        margin: 6px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NessDan's YouTube Thumbnail Downloader</h1>
+    <hr />
+    <button id="currentVideo" disabled>Download This Video's Thumbnail</button>
+    <img class="thumbnail display-none" id="currentVideoThumbnail" />
+    <div class="or-container">
+      <hr class="or-line" />
+      <div class="or-text">OR</div>
+    </div>
+    <input type="text" id="urlInput" placeholder="Paste YouTube URL" />
+    <button id="customVideo" disabled>Download Thumbnail From URL</button>
+    <img class="thumbnail display-none" id="customVideoThumbnail" />
+    <div class="or-container">
+      <hr class="or-line" />
+      <div class="or-text">ALSO</div>
+    </div>
+    <h1>
+      <a href="https://keyboard.gg/" target="_blank"
+        >Keyboards &gt; Controllers</a
+      >
+    </h1>
+    <script src="popup.js"></script>
+  </body>
+</html>
