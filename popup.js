@@ -1,3 +1,50 @@
+const thumbnailFormats = [
+  "maxresdefault.jpg",
+  "maxresdefault.webp",
+  "sddefault.jpg",
+  "hqdefault.jpg",
+  "mqdefault.jpg",
+];
+let highestQualityImage = "";
+let highestQualityFormat = thumbnailFormats[thumbnailFormats.length - 1];
+
+function checkThumbnailExistence(videoId, formats, thumbnailEle) {
+  let firstValidImageLoaded = false;
+
+  const promises = formats.map((format) => {
+    return new Promise((resolve) => {
+      const imgUrl = `https://img.youtube.com/vi/${videoId}/${format}`;
+      const img = new Image();
+
+      img.onload = () => {
+        if (img.width !== 120 || img.height !== 90) {
+          if (!firstValidImageLoaded) {
+            thumbnailEle.src = imgUrl;
+            thumbnailEle.classList.remove("display-none");
+            firstValidImageLoaded = true;
+          }
+
+          if (formats.indexOf(format) < formats.indexOf(highestQualityFormat)) {
+            highestQualityFormat = format;
+            highestQualityImage = imgUrl;
+          }
+          resolve(imgUrl);
+        } else {
+          resolve(null);
+        }
+      };
+
+      img.onerror = () => {
+        resolve(null);
+      };
+
+      img.src = imgUrl;
+    });
+  });
+
+  return Promise.all(promises).then(() => highestQualityImage);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Activate or deactivate the current video button
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -54,19 +101,6 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("customVideoThumbnail")
     .addEventListener("click", downloadCustomVideoThumbnail);
 
-  function updateImage(url, thumbnailEle) {
-    const videoId = parseVideoId(url);
-    const imgUrl = getThumbnailUrl(videoId);
-    if (imgUrl === "") {
-      thumbnailEle.src = "";
-      thumbnailEle.classList.add("display-none");
-      return;
-    }
-
-    thumbnailEle.src = imgUrl;
-    thumbnailEle.classList.remove("display-none");
-  }
-
   function parseVideoId(url) {
     let videoId = "";
     if (url.includes("youtube.com/watch?v=")) {
@@ -77,17 +111,27 @@ document.addEventListener("DOMContentLoaded", function () {
     return videoId;
   }
 
-  function getThumbnailUrl(videoId) {
-    if (videoId === "") return "";
-
-    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  function updateImage(url, thumbnailEle) {
+    const videoId = parseVideoId(url);
+    highestQualityFormat = thumbnailFormats[thumbnailFormats.length - 1]; // Reset the highest quality found
+    checkThumbnailExistence(videoId, thumbnailFormats, thumbnailEle).then(
+      (highestQuality) => {
+        // Reset or set the download button's state depending on highestQuality
+        if (highestQuality) {
+          document.getElementById("currentVideo").disabled = false;
+        } else {
+          document.getElementById("currentVideo").disabled = true;
+        }
+      }
+    );
   }
 
   function downloadThumbnail(videoId) {
-    const imgUrl = getThumbnailUrl(videoId);
-    chrome.downloads.download({
-      url: imgUrl,
-      filename: `${videoId}_thumbnail.jpg`,
-    });
+    if (highestQualityImage) {
+      chrome.downloads.download({
+        url: highestQualityImage,
+        filename: `${videoId}_thumbnail_${highestQualityFormat}`,
+      });
+    }
   }
 });
