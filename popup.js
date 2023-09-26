@@ -1,49 +1,16 @@
-const thumbnailFormats = [
-  "maxresdefault.jpg",
-  "maxresdefault.webp",
-  "sddefault.jpg",
-  "hqdefault.jpg",
-  "mqdefault.jpg",
-];
-let highestQualityImage = "";
-let highestQualityFormat = thumbnailFormats[thumbnailFormats.length - 1];
+import {
+  parseVideoId,
+  checkThumbnailExistence,
+  downloadThumbnail,
+} from "./download-helpers.js";
 
-function checkThumbnailExistence(videoId, formats, thumbnailEle) {
-  let firstValidImageLoaded = false;
-
-  const promises = formats.map((format) => {
-    return new Promise((resolve) => {
-      const imgUrl = `https://img.youtube.com/vi/${videoId}/${format}`;
-      const img = new Image();
-
-      img.onload = () => {
-        if (img.width !== 120 || img.height !== 90) {
-          if (!firstValidImageLoaded) {
-            thumbnailEle.src = imgUrl;
-            thumbnailEle.classList.remove("display-none");
-            firstValidImageLoaded = true;
-          }
-
-          if (formats.indexOf(format) < formats.indexOf(highestQualityFormat)) {
-            highestQualityFormat = format;
-            highestQualityImage = imgUrl;
-          }
-          resolve(imgUrl);
-        } else {
-          resolve(null);
-        }
-      };
-
-      img.onerror = () => {
-        resolve(null);
-      };
-
-      img.src = imgUrl;
-    });
-  });
-
-  return Promise.all(promises).then(() => highestQualityImage);
-}
+// For right-clicking on a video thumbnail and downloading it
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "downloadThumbnail") {
+    const videoId = message.videoId;
+    downloadThumbnail(videoId);
+  }
+});
 
 document.addEventListener("DOMContentLoaded", function () {
   // Activate or deactivate the current video button
@@ -101,37 +68,17 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("customVideoThumbnail")
     .addEventListener("click", downloadCustomVideoThumbnail);
 
-  function parseVideoId(url) {
-    let videoId = "";
-    if (url.includes("youtube.com/watch?v=")) {
-      videoId = url.split("v=")[1].substring(0, 11);
-    } else if (url.includes("youtu.be/")) {
-      videoId = url.split("youtu.be/")[1].substring(0, 11);
-    }
-    return videoId;
-  }
-
   function updateImage(url, thumbnailEle) {
     const videoId = parseVideoId(url);
-    highestQualityFormat = thumbnailFormats[thumbnailFormats.length - 1]; // Reset the highest quality found
-    checkThumbnailExistence(videoId, thumbnailFormats, thumbnailEle).then(
-      (highestQuality) => {
-        // Reset or set the download button's state depending on highestQuality
-        if (highestQuality) {
-          document.getElementById("currentVideo").disabled = false;
-        } else {
-          document.getElementById("currentVideo").disabled = true;
-        }
+    checkThumbnailExistence(videoId).then((highestQuality) => {
+      // Reset or set the download button's state depending on highestQuality
+      if (highestQuality) {
+        thumbnailEle.src = highestQuality;
+        thumbnailEle.classList.remove("display-none");
+        document.getElementById("currentVideo").disabled = false;
+      } else {
+        document.getElementById("currentVideo").disabled = true;
       }
-    );
-  }
-
-  function downloadThumbnail(videoId) {
-    if (highestQualityImage) {
-      chrome.downloads.download({
-        url: highestQualityImage,
-        filename: `${videoId}_thumbnail_${highestQualityFormat}`,
-      });
-    }
+    });
   }
 });

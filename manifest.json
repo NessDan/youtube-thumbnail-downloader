@@ -1,9 +1,14 @@
 {
   "manifest_version": 3,
   "name": "NessDan's YouTube Thumbnail Downloader",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Download YouTube video thumbnails",
-  "permissions": ["activeTab", "downloads"],
+  "permissions": ["activeTab", "contextMenus", "downloads"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "host_permissions": ["https://img.youtube.com/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
