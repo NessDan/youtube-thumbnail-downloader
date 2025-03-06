@@ -21,6 +21,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     info.menuItemId === "downloadThumbnailPage"
   ) {
     const videoId = parseVideoId(info.linkUrl || tab.url);
-    downloadThumbnail(videoId);
+    // Pass the tab title to downloadThumbnail
+    downloadThumbnail(videoId, tab.title);
   }
 });

@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const url = tabs[0].url;
       const videoId = parseVideoId(url);
-      downloadThumbnail(videoId);
+      downloadThumbnail(videoId, tabs[0].title);
     });
   }
 
@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function downloadCustomVideoThumbnail() {
     const url = urlInput.value;
     const videoId = parseVideoId(url);
+    // For custom URL input, we don't have a title, so the function will use the active tab title as fallback
     downloadThumbnail(videoId);
   }
 

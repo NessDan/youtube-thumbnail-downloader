@@ -47,13 +47,36 @@ export const checkThumbnailExistence = async (videoId) => {
   return highestQualityImage;
 };
 
-export const downloadThumbnail = async (videoId) => {
+// Helper function to sanitize filenames
+export const sanitizeFilename = (filename) => {
+  // Replace characters that aren't allowed in filenames
+  return filename
+    .replace(/[\\/:*?"<>|]/g, "_") // Replace invalid characters with underscore
+    .replace(/\s+/g, " ") // Replace multiple spaces with single space
+    .trim(); // Remove leading/trailing spaces
+};
+
+export const downloadThumbnail = async (videoId, tabTitle = null) => {
   const highestQuality = await checkThumbnailExistence(videoId);
 
   if (highestQuality) {
+    // Create filename based on title and format
+    const format = highestQuality.split("/").pop();
+    let filename;
+
+    if (tabTitle) {
+      // Remove " - YouTube" from the end of the title if present
+      const cleanTitle = tabTitle.replace(/ - YouTube$/, "");
+      const sanitizedTitle = sanitizeFilename(cleanTitle);
+      filename = `${sanitizedTitle} - ${videoId}.${format.split(".").pop()}`;
+    } else {
+      // Fallback to original naming pattern
+      filename = `YouTube Thumbnail - ${videoId}.${format.split(".").pop()}`;
+    }
+
     chrome.downloads.download({
       url: highestQuality,
-      filename: `${videoId}_thumbnail_${highestQuality.split("/").pop()}`,
+      filename: filename,
     });
   }
 };
